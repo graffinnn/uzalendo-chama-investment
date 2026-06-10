@@ -1,0 +1,16 @@
+node_modules/
+npm-debug.log*
+.env
+.env.local
+.env.development
+.env.production
+.DS_Store
+Thumbs.db
+.expo/
+dist/
+build/
+web-build/
+*.jks
+*.p12
+*.key
+*.mobileprovision
