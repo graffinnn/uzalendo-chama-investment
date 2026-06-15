@@ -7,6 +7,7 @@ const { ApolloServerPluginLandingPageLocalDefault } = require('apollo-server-cor
 const sequelize = require('./src/config/database');
 const typeDefs = require('./src/graphql/typeDefs');
 const resolvers = require('./src/graphql/resolvers');
+const { getAuthUser } = require('./src/middleware/authMiddleware');
 
 async function startServer() {
   const app = express();
@@ -16,7 +17,10 @@ async function startServer() {
     resolvers,
     csrfPrevention: true,
     plugins: [ApolloServerPluginLandingPageLocalDefault({ embed: true })],
-    context: ({ req }) => ({ req })
+    context: ({ req }) => {
+      const user = getAuthUser(req);
+      return { req, user };
+    }
   });
 
   await server.start();
