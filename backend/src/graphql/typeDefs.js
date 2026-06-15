@@ -5,6 +5,9 @@ const typeDefs = gql`
     ping: String
     getMembers: [Member!]!
     getMember(id: ID!): Member!
+    getMemberContributions(memberId: ID!): [Contribution!]!
+    getAllContributions: [Contribution!]!
+    getPoolTotal: Float!
   }
 
   type Mutation {
@@ -14,6 +17,7 @@ const typeDefs = gql`
     loginMember(phone: String!, password: String!): MemberAuthPayload!
     activateMember(memberId: ID!): Member!
     deactivateMember(memberId: ID!): Member!
+    recordContribution(input: RecordContributionInput!): Contribution!
   }
 
   type Admin {
@@ -48,6 +52,16 @@ const typeDefs = gql`
     member: Member!
   }
 
+  type Contribution {
+    id: ID!
+    amount: Float!
+    contribution_month: Int!
+    contribution_year: Int!
+    recorded_at: String
+    member_name: String
+    member_number: String
+  }
+
   input RegisterAdminInput {
     full_name: String!
     email: String!
@@ -60,6 +74,13 @@ const typeDefs = gql`
     phone: String!
     national_id: String!
     password: String!
+  }
+
+  input RecordContributionInput {
+    member_id: ID!
+    amount: Float!
+    contribution_month: Int!
+    contribution_year: Int!
   }
 `;
 
