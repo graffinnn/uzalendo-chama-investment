@@ -3,6 +3,8 @@ const { gql } = require('apollo-server-express');
 const typeDefs = gql`
   type Query {
     ping: String
+    getMembers: [Member!]!
+    getMember(id: ID!): Member!
   }
 
   type Mutation {
@@ -10,6 +12,8 @@ const typeDefs = gql`
     loginAdmin(email: String!, password: String!): AdminAuthPayload!
     registerMember(input: RegisterMemberInput!): Member!
     loginMember(phone: String!, password: String!): MemberAuthPayload!
+    activateMember(memberId: ID!): Member!
+    deactivateMember(memberId: ID!): Member!
   }
 
   type Admin {
@@ -32,7 +36,11 @@ const typeDefs = gql`
     national_id: String!
     member_number: String!
     status: String!
+    loan_limit: Float
     joined_at: String
+    overall_score: Float
+    contribution_score: Float
+    loan_score: Float
   }
 
   type MemberAuthPayload {
