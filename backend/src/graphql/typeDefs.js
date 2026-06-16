@@ -8,6 +8,9 @@ const typeDefs = gql`
     getMemberContributions(memberId: ID!): [Contribution!]!
     getAllContributions: [Contribution!]!
     getPoolTotal: Float!
+    getCurrentCycle: Cycle
+    getMyCyclePosition: CyclePosition
+    getCyclePositions(cycleId: ID!): [CyclePosition!]!
   }
 
   type Mutation {
@@ -18,6 +21,8 @@ const typeDefs = gql`
     activateMember(memberId: ID!): Member!
     deactivateMember(memberId: ID!): Member!
     recordContribution(input: RecordContributionInput!): Contribution!
+    createCycle(input: CreateCycleInput!): Cycle!
+    completeCycle(cycleId: ID!): Cycle!
   }
 
   type Admin {
@@ -62,6 +67,28 @@ const typeDefs = gql`
     member_number: String
   }
 
+  type Cycle {
+    id: ID!
+    payout_amount: Float!
+    start_date: String!
+    status: String!
+    created_at: String
+    total_positions: Int
+    positions: [CyclePosition]
+  }
+
+  type CyclePosition {
+    id: ID!
+    position_number: Int!
+    expected_payout_date: String!
+    actual_payout_date: String
+    status: String!
+    member_name: String
+    member_number: String
+    member_id: ID
+    payout_amount: Float
+  }
+
   input RegisterAdminInput {
     full_name: String!
     email: String!
@@ -81,6 +108,17 @@ const typeDefs = gql`
     amount: Float!
     contribution_month: Int!
     contribution_year: Int!
+  }
+
+  input CreateCycleInput {
+    payout_amount: Float!
+    start_date: String!
+    positions: [CyclePositionInput!]!
+  }
+
+  input CyclePositionInput {
+    member_id: ID!
+    position_number: Int!
   }
 `;
 
