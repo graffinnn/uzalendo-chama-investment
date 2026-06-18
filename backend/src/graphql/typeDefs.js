@@ -11,6 +11,10 @@ const typeDefs = gql`
     getCurrentCycle: Cycle
     getMyCyclePosition: CyclePosition
     getCyclePositions(cycleId: ID!): [CyclePosition!]!
+    getMySavingsBalance: Float!
+    getMemberSavingsBalance(memberId: ID!): Float!
+    getMySavingsHistory: [Saving!]!
+    getPendingWithdrawals: [SavingsWithdrawal!]!
   }
 
   type Mutation {
@@ -23,6 +27,9 @@ const typeDefs = gql`
     recordContribution(input: RecordContributionInput!): Contribution!
     createCycle(input: CreateCycleInput!): Cycle!
     completeCycle(cycleId: ID!): Cycle!
+    recordSavings(input: RecordSavingsInput!): Saving!
+    requestWithdrawal(input: WithdrawalInput!): SavingsWithdrawal!
+    approveWithdrawal(withdrawalId: ID!): SavingsWithdrawal!
   }
 
   type Admin {
@@ -89,6 +96,27 @@ const typeDefs = gql`
     payout_amount: Float
   }
 
+  type Saving {
+    id: ID!
+    amount: Float!
+    transaction_type: String!
+    notes: String
+    recorded_at: String
+    member_name: String
+    member_number: String
+  }
+
+  type SavingsWithdrawal {
+    id: ID!
+    amount: Float!
+    reason: String
+    status: String!
+    requested_at: String
+    reviewed_at: String
+    member_name: String
+    member_number: String
+  }
+
   input RegisterAdminInput {
     full_name: String!
     email: String!
@@ -119,6 +147,18 @@ const typeDefs = gql`
   input CyclePositionInput {
     member_id: ID!
     position_number: Int!
+  }
+
+  input RecordSavingsInput {
+    member_id: ID!
+    amount: Float!
+    transaction_type: String!
+    notes: String
+  }
+
+  input WithdrawalInput {
+    amount: Float!
+    reason: String
   }
 `;
 
