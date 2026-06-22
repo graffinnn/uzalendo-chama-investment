@@ -15,6 +15,10 @@ const typeDefs = gql`
     getMemberSavingsBalance(memberId: ID!): Float!
     getMySavingsHistory: [Saving!]!
     getPendingWithdrawals: [SavingsWithdrawal!]!
+    getMyLoans: [Loan!]!
+    getAllLoans: [Loan!]!
+    getLoan(loanId: ID!): Loan!
+    getOverdueLoans: [LoanRepayment!]!
   }
 
   type Mutation {
@@ -30,6 +34,10 @@ const typeDefs = gql`
     recordSavings(input: RecordSavingsInput!): Saving!
     requestWithdrawal(input: WithdrawalInput!): SavingsWithdrawal!
     approveWithdrawal(withdrawalId: ID!): SavingsWithdrawal!
+    applyForLoan(input: LoanInput!): Loan!
+    approveLoan(loanId: ID!): Loan!
+    rejectLoan(loanId: ID!): Loan!
+    recordRepayment(repaymentId: ID!): LoanRepayment!
   }
 
   type Admin {
@@ -117,6 +125,31 @@ const typeDefs = gql`
     member_number: String
   }
 
+  type Loan {
+    id: ID!
+    amount: Float!
+    reason: String!
+    repayment_period_months: Int!
+    interest_rate: Float!
+    status: String!
+    applied_at: String
+    reviewed_at: String
+    member_name: String
+    member_number: String
+    repayment_schedule: [LoanRepayment]
+  }
+  
+  type LoanRepayment {
+    id: ID!
+    amount: Float!
+    due_date: String!
+    paid_date: String
+    status: String!
+    member_name: String
+    member_number: String
+    loan_id: ID
+  }
+
   input RegisterAdminInput {
     full_name: String!
     email: String!
@@ -159,6 +192,12 @@ const typeDefs = gql`
   input WithdrawalInput {
     amount: Float!
     reason: String
+  }
+
+  input LoanInput {
+    amount: Float!
+    reason: String!
+    repayment_period_months: Int!
   }
 `;
 

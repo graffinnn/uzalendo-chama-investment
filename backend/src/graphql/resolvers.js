@@ -3,6 +3,7 @@ const memberResolvers = require('../modules/members/member.resolvers');
 const contributionResolvers = require('../modules/contributions/contribution.resolvers');
 const cycleResolvers = require('../modules/cycles/cycle.resolvers');
 const savingsResolvers = require('../modules/savings/savings.resolvers');
+const loanResolvers = require('../modules/loans/loan.resolvers');
 
 const resolvers = {
   Query: {
@@ -10,14 +11,16 @@ const resolvers = {
     ...memberResolvers.Query,
     ...contributionResolvers.Query,
     ...cycleResolvers.Query,
-    ...savingsResolvers.Query
+    ...savingsResolvers.Query,
+    ...loanResolvers.Query
   },
   Mutation: {
     ...authResolvers.Mutation,
     ...memberResolvers.Mutation,
     ...contributionResolvers.Mutation,
     ...cycleResolvers.Mutation,
-    ...savingsResolvers.Mutation
+    ...savingsResolvers.Mutation,
+    ...loanResolvers.Mutation
   }
 };
 
