@@ -1,4 +1,5 @@
 const sequelize = require('../../config/database');
+const { recalculateLoanScore } = require('../scores/score.service');
 
 const query = async (sql, params = []) => {
   const [results] = await sequelize.query(sql, {
@@ -6,6 +7,16 @@ const query = async (sql, params = []) => {
     type: sequelize.constructor.QueryTypes.RAW
   });
   return results;
+};
+
+// Dedicated helper for INSERTs - same fix as contribution.service.js.
+// QueryTypes.RAW doesn't reliably return insertId; QueryTypes.INSERT does.
+const insert = async (sql, params = []) => {
+  const [insertId] = await sequelize.query(sql, {
+    replacements: params,
+    type: sequelize.constructor.QueryTypes.INSERT
+  });
+  return insertId;
 };
 
 const applyForLoan = async (input, memberId) => {
@@ -43,19 +54,19 @@ const applyForLoan = async (input, memberId) => {
     throw new Error('You already have an active or pending loan.');
   }
 
-  const insertResult = await query(
+  const loanId = await insert(
     'INSERT INTO loans SET member_id = ?, amount = ?, reason = ?, repayment_period_months = ?, interest_rate = 10.00',
     [memberId, amount, reason, period]
   );
 
-  await query(
+  await insert(
     'INSERT INTO audit_logs SET performed_by_member = ?, action = ?, target_table = ?, target_id = ?, details = ?',
-    [memberId, 'LOAN_APPLIED', 'loans', insertResult.insertId, `Loan application of KES ${amount} for ${period} months`]
+    [memberId, 'LOAN_APPLIED', 'loans', loanId, `Loan application of KES ${amount} for ${period} months`]
   );
 
   const loans = await query(
     'SELECT id, amount, reason, repayment_period_months, interest_rate, status, applied_at FROM loans WHERE id = ?',
-    [insertResult.insertId]
+    [loanId]
   );
 
   return loans[0];
@@ -84,13 +95,13 @@ const approveLoan = async (loanId, adminId) => {
     dueDate.setMonth(dueDate.getMonth() + i);
     const dueDateStr = dueDate.toISOString().split('T')[0];
 
-    await query(
+    await insert(
       'INSERT INTO loan_repayments SET loan_id = ?, recorded_by = ?, amount = ?, due_date = ?',
       [Number(loanId), Number(adminId), monthlyPayment.toFixed(2), dueDateStr]
     );
   }
 
-  await query(
+  await insert(
     'INSERT INTO audit_logs SET performed_by_admin = ?, action = ?, target_table = ?, target_id = ?, details = ?',
     [Number(adminId), 'LOAN_APPROVED', 'loans', Number(loanId), `Loan ID ${loanId} approved. Monthly payment: KES ${monthlyPayment.toFixed(2)}`]
   );
@@ -111,7 +122,7 @@ const rejectLoan = async (loanId, adminId) => {
     [Number(adminId), Number(loanId)]
   );
 
-  await query(
+  await insert(
     'INSERT INTO audit_logs SET performed_by_admin = ?, action = ?, target_table = ?, target_id = ?, details = ?',
     [Number(adminId), 'LOAN_REJECTED', 'loans', Number(loanId), `Loan ID ${loanId} rejected`]
   );
@@ -121,7 +132,10 @@ const rejectLoan = async (loanId, adminId) => {
 
 const recordRepayment = async (repaymentId, adminId) => {
   const repayments = await query(
-    'SELECT id, loan_id, amount, status FROM loan_repayments WHERE id = ?',
+    `SELECT lr.id, lr.loan_id, lr.amount, lr.status, l.member_id
+     FROM loan_repayments lr
+     JOIN loans l ON l.id = lr.loan_id
+     WHERE lr.id = ?`,
     [Number(repaymentId)]
   );
   if (!repayments || repayments.length === 0) throw new Error('Repayment record not found.');
@@ -146,7 +160,7 @@ const recordRepayment = async (repaymentId, adminId) => {
     );
   }
 
-  await updateLoanScore(repayment.loan_id);
+  await recalculateLoanScore(repayment.member_id, `Repayment recorded for loan ID ${repayment.loan_id}`);
 
   const updated = await query(
     'SELECT id, amount, due_date, paid_date, status FROM loan_repayments WHERE id = ?',
@@ -154,32 +168,6 @@ const recordRepayment = async (repaymentId, adminId) => {
   );
 
   return updated[0];
-};
-
-const updateLoanScore = async (loanId) => {
-  const loans = await query(
-    'SELECT member_id FROM loans WHERE id = ?',
-    [Number(loanId)]
-  );
-  if (!loans || loans.length === 0) return;
-
-  const memberId = loans[0].member_id;
-
-  const repayments = await query(
-    "SELECT status FROM loan_repayments lr JOIN loans l ON l.id = lr.loan_id WHERE l.member_id = ?",
-    [memberId]
-  );
-
-  if (!repayments || repayments.length === 0) return;
-
-  const paid = repayments.filter(r => r.status === 'PAID').length;
-  const total = repayments.length;
-  const loanScore = Math.round((paid / total) * 100);
-
-  await query(
-    "UPDATE member_scores SET loan_score = ?, overall_score = ROUND((contribution_score * 0.6) + (? * 0.4), 2) WHERE member_id = ?",
-    [loanScore, loanScore, memberId]
-  );
 };
 
 const getLoanById = async (loanId) => {

@@ -19,6 +19,11 @@ const typeDefs = gql`
     getAllLoans: [Loan!]!
     getLoan(loanId: ID!): Loan!
     getOverdueLoans: [LoanRepayment!]!
+    getMyScore: Score!
+    getMemberScore(memberId: ID!): Score!
+    getAllMemberScores: [MemberScoreSummary!]!
+    getMyScoreHistory: [ScoreHistoryEntry!]!
+    getMemberScoreHistory(memberId: ID!): [ScoreHistoryEntry!]!
   }
 
   type Mutation {
@@ -138,7 +143,7 @@ const typeDefs = gql`
     member_number: String
     repayment_schedule: [LoanRepayment]
   }
-  
+
   type LoanRepayment {
     id: ID!
     amount: Float!
@@ -148,6 +153,33 @@ const typeDefs = gql`
     member_name: String
     member_number: String
     loan_id: ID
+  }
+
+  type Score {
+    member_id: ID!
+    overall_score: Float!
+    contribution_score: Float!
+    loan_score: Float!
+    updated_at: String
+  }
+
+  type MemberScoreSummary {
+    member_id: ID!
+    full_name: String!
+    member_number: String!
+    overall_score: Float
+    contribution_score: Float
+    loan_score: Float
+    updated_at: String
+  }
+
+  type ScoreHistoryEntry {
+    id: ID!
+    overall_score: Float!
+    contribution_score: Float!
+    loan_score: Float!
+    reason: String
+    recorded_at: String
   }
 
   input RegisterAdminInput {
