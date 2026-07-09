@@ -24,6 +24,9 @@ const typeDefs = gql`
     getAllMemberScores: [MemberScoreSummary!]!
     getMyScoreHistory: [ScoreHistoryEntry!]!
     getMemberScoreHistory(memberId: ID!): [ScoreHistoryEntry!]!
+    getPortfolio: Portfolio!
+    getInvestment(investmentId: ID!): Investment!
+    getMyPortfolioShare: PortfolioShare!
   }
 
   type Mutation {
@@ -43,6 +46,8 @@ const typeDefs = gql`
     approveLoan(loanId: ID!): Loan!
     rejectLoan(loanId: ID!): Loan!
     recordRepayment(repaymentId: ID!): LoanRepayment!
+    addInvestment(input: AddInvestmentInput!): Investment!
+    updateInvestmentValue(investmentId: ID!, newValue: Float!): Investment!
   }
 
   type Admin {
@@ -180,6 +185,44 @@ const typeDefs = gql`
     loan_score: Float!
     reason: String
     recorded_at: String
+  }
+
+  type Investment {
+  id: ID!
+  name: String!
+  investment_type: String!
+  amount_invested: Float!
+  current_value: Float!
+  expected_return: Float
+  investment_date: String!
+  notes: String
+  created_at: String
+  profit_loss: Float
+  profit_loss_percentage: Float
+  }
+
+  type Portfolio {
+  investments: [Investment!]!
+  total_invested: Float!
+  total_current_value: Float!
+  total_profit_loss: Float!
+  count: Int!
+  }
+
+  type PortfolioShare {
+  share_percentage: Float!
+  estimated_value: Float!
+  portfolio_total_value: Float!
+  }
+
+  input AddInvestmentInput {
+  name: String!
+  investment_type: String!
+  amount_invested: Float!
+  current_value: Float
+  expected_return: Float
+  investment_date: String!
+  notes: String
   }
 
   input RegisterAdminInput {

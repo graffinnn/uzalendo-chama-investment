@@ -5,6 +5,7 @@ const cycleResolvers = require('../modules/cycles/cycle.resolvers');
 const savingsResolvers = require('../modules/savings/savings.resolvers');
 const loanResolvers = require('../modules/loans/loan.resolvers');
 const scoreResolvers = require('../modules/scores/score.resolvers');
+const investmentResolvers = require('../modules/investments/investment.resolvers');
 
 const resolvers = {
   Query: {
@@ -14,7 +15,8 @@ const resolvers = {
     ...cycleResolvers.Query,
     ...savingsResolvers.Query,
     ...loanResolvers.Query,
-    ...scoreResolvers.Query
+    ...scoreResolvers.Query,
+    ...investmentResolvers.Query
   },
   Mutation: {
     ...authResolvers.Mutation,
@@ -22,7 +24,8 @@ const resolvers = {
     ...contributionResolvers.Mutation,
     ...cycleResolvers.Mutation,
     ...savingsResolvers.Mutation,
-    ...loanResolvers.Mutation
+    ...loanResolvers.Mutation,
+    ...investmentResolvers.Mutation
   }
 };
 
