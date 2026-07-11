@@ -27,6 +27,7 @@ const typeDefs = gql`
     getPortfolio: Portfolio!
     getInvestment(investmentId: ID!): Investment!
     getMyPortfolioShare: PortfolioShare!
+    getAdminDashboard: AdminDashboard!
   }
 
   type Mutation {
@@ -213,6 +214,52 @@ const typeDefs = gql`
   share_percentage: Float!
   estimated_value: Float!
   portfolio_total_value: Float!
+  }
+
+  type AdminDashboard {
+  member_counts: MemberCounts!
+  pool_funds_total: Float!
+  savings_total: Float!
+  loan_summary: LoanSummary!
+  cycle_status: CycleStatus!
+  portfolio_total: Float!
+  top_members: [TopMember!]!
+  recent_activity: [ActivityLog!]!
+  }
+
+  type MemberCounts {
+  total: Int!
+  active: Int!
+  pending: Int!
+  inactive: Int!
+  }
+
+  type LoanSummary {
+  active_count: Int!
+  active_total: Float!
+  overdue_count: Int!
+  pending_approval_count: Int!
+  }
+
+  type CycleStatus {
+  has_active_cycle: Boolean!
+  next_payout_member: String
+  next_payout_date: String
+  payout_amount: Float
+  }
+
+  type TopMember {
+  full_name: String!
+  member_number: String!
+  overall_score: Float!
+  }
+
+  type ActivityLog {
+  id: ID!
+  action: String!
+  details: String
+  performed_at: String
+  performed_by: String
   }
 
   input AddInvestmentInput {
