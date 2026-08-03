@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { gql, useQuery, useMutation } from '@apollo/client';
 
 const GET_ACTIVE_MEMBERS = gql`
@@ -87,111 +88,118 @@ export default function RecordContributionScreen() {
 
   if (loadingMembers) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2E7D32" />
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#2E7D32" />
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (membersError) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>Failed to load members</Text>
-        <Text style={styles.errorDetail}>{membersError.message}</Text>
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>Failed to load members</Text>
+          <Text style={styles.errorDetail}>{membersError.message}</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   const activeMembers = data.getMembers.filter((m) => m.status === 'ACTIVE');
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Record Contribution</Text>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <Text style={styles.title}>Record Contribution</Text>
 
-      <Text style={styles.label}>Select Member</Text>
-      {activeMembers.length === 0 ? (
-        <Text style={styles.emptyText}>No active members available</Text>
-      ) : (
-        <View style={styles.memberList}>
-          {activeMembers.map((m) => (
+        <Text style={styles.label}>Select Member</Text>
+        {activeMembers.length === 0 ? (
+          <Text style={styles.emptyText}>No active members available</Text>
+        ) : (
+          <View style={styles.memberList}>
+            {activeMembers.map((m) => (
+              <TouchableOpacity
+                key={m.id}
+                style={[
+                  styles.memberChip,
+                  selectedMember?.id === m.id && styles.memberChipSelected
+                ]}
+                onPress={() => setSelectedMember(m)}
+              >
+                <Text
+                  style={[
+                    styles.memberChipText,
+                    selectedMember?.id === m.id && styles.memberChipTextSelected
+                  ]}
+                >
+                  {m.full_name} · {m.member_number}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        <Text style={styles.label}>Amount (KES)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g. 2000"
+          placeholderTextColor="#999"
+          value={amount}
+          onChangeText={setAmount}
+          keyboardType="numeric"
+        />
+
+        <Text style={styles.label}>Month</Text>
+        <View style={styles.monthGrid}>
+          {MONTHS.map((label, index) => (
             <TouchableOpacity
-              key={m.id}
+              key={label}
               style={[
-                styles.memberChip,
-                selectedMember?.id === m.id && styles.memberChipSelected
+                styles.monthChip,
+                month === index + 1 && styles.monthChipSelected
               ]}
-              onPress={() => setSelectedMember(m)}
+              onPress={() => setMonth(index + 1)}
             >
               <Text
                 style={[
-                  styles.memberChipText,
-                  selectedMember?.id === m.id && styles.memberChipTextSelected
+                  styles.monthChipText,
+                  month === index + 1 && styles.monthChipTextSelected
                 ]}
               >
-                {m.full_name} · {m.member_number}
+                {label}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
-      )}
 
-      <Text style={styles.label}>Amount (KES)</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="e.g. 2000"
-        placeholderTextColor="#999"
-        value={amount}
-        onChangeText={setAmount}
-        keyboardType="numeric"
-      />
+        <Text style={styles.label}>Year</Text>
+        <TextInput
+          style={styles.input}
+          value={String(year)}
+          onChangeText={(text) => setYear(Number(text) || year)}
+          keyboardType="numeric"
+        />
 
-      <Text style={styles.label}>Month</Text>
-      <View style={styles.monthGrid}>
-        {MONTHS.map((label, index) => (
-          <TouchableOpacity
-            key={label}
-            style={[
-              styles.monthChip,
-              month === index + 1 && styles.monthChipSelected
-            ]}
-            onPress={() => setMonth(index + 1)}
-          >
-            <Text
-              style={[
-                styles.monthChipText,
-                month === index + 1 && styles.monthChipTextSelected
-              ]}
-            >
-              {label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <Text style={styles.label}>Year</Text>
-      <TextInput
-        style={styles.input}
-        value={String(year)}
-        onChangeText={(text) => setYear(Number(text) || year)}
-        keyboardType="numeric"
-      />
-
-      <TouchableOpacity
-        style={styles.submitButton}
-        onPress={handleSubmit}
-        disabled={submitting}
-      >
-        {submitting ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.submitButtonText}>Record Contribution</Text>
-        )}
-      </TouchableOpacity>
-    </ScrollView>
+        <TouchableOpacity
+          style={styles.submitButton}
+          onPress={handleSubmit}
+          disabled={submitting}
+        >
+          {submitting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.submitButtonText}>Record Contribution</Text>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: '#F5F7F5' },
   container: { flex: 1, backgroundColor: '#F5F7F5' },
   content: { padding: 16, paddingBottom: 40 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },

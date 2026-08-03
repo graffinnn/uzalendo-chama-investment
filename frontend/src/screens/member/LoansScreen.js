@@ -11,6 +11,7 @@ import {
   Modal,
   RefreshControl
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { gql, useQuery, useMutation } from '@apollo/client';
 
 const GET_MY_LOANS = gql`
@@ -106,21 +107,25 @@ export default function LoansScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2E7D32" />
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#2E7D32" />
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>Failed to load loans</Text>
-        <Text style={styles.errorDetail}>{error.message}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>Failed to load loans</Text>
+          <Text style={styles.errorDetail}>{error.message}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -128,121 +133,124 @@ export default function LoansScreen() {
   const hasActiveLoan = loans.some((l) => l.status === 'PENDING' || l.status === 'APPROVED');
 
   return (
-    <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <Text style={styles.headerTitle}>My Loans</Text>
-        <TouchableOpacity
-          style={[styles.applyButton, hasActiveLoan && styles.applyButtonDisabled]}
-          onPress={() => setModalVisible(true)}
-          disabled={hasActiveLoan}
-        >
-          <Text style={styles.applyButtonText}>Apply</Text>
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.container}>
+        <View style={styles.headerRow}>
+          <Text style={styles.headerTitle}>My Loans</Text>
+          <TouchableOpacity
+            style={[styles.applyButton, hasActiveLoan && styles.applyButtonDisabled]}
+            onPress={() => setModalVisible(true)}
+            disabled={hasActiveLoan}
+          >
+            <Text style={styles.applyButtonText}>Apply</Text>
+          </TouchableOpacity>
+        </View>
 
-      {hasActiveLoan && (
-        <Text style={styles.noticeText}>
-          You already have a pending or active loan. Apply again once it's fully paid.
-        </Text>
-      )}
+        {hasActiveLoan && (
+          <Text style={styles.noticeText}>
+            You already have a pending or active loan. Apply again once it's fully paid.
+          </Text>
+        )}
 
-      <FlatList
-        data={loans}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={refetch} colors={['#2E7D32']} />
-        }
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.cardTop}>
-              <Text style={styles.loanAmount}>{formatKES(item.amount)}</Text>
-              <View style={[styles.statusBadge, { backgroundColor: statusColors[item.status] + '20' }]}>
-                <Text style={[styles.statusText, { color: statusColors[item.status] }]}>
-                  {item.status.replace('_', ' ')}
-                </Text>
+        <FlatList
+          data={loans}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={refetch} colors={['#2E7D32']} />
+          }
+          renderItem={({ item }) => (
+            <View style={styles.card}>
+              <View style={styles.cardTop}>
+                <Text style={styles.loanAmount}>{formatKES(item.amount)}</Text>
+                <View style={[styles.statusBadge, { backgroundColor: statusColors[item.status] + '20' }]}>
+                  <Text style={[styles.statusText, { color: statusColors[item.status] }]}>
+                    {item.status.replace('_', ' ')}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.loanReason}>{item.reason}</Text>
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Period</Text>
+                <Text style={styles.statValue}>{item.repayment_period_months} months</Text>
+              </View>
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Interest rate</Text>
+                <Text style={styles.statValue}>{item.interest_rate}% / month</Text>
+              </View>
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Applied</Text>
+                <Text style={styles.statValue}>{formatDate(item.applied_at)}</Text>
               </View>
             </View>
-            <Text style={styles.loanReason}>{item.reason}</Text>
-            <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Period</Text>
-              <Text style={styles.statValue}>{item.repayment_period_months} months</Text>
-            </View>
-            <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Interest rate</Text>
-              <Text style={styles.statValue}>{item.interest_rate}% / month</Text>
-            </View>
-            <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Applied</Text>
-              <Text style={styles.statValue}>{formatDate(item.applied_at)}</Text>
-            </View>
-          </View>
-        )}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No loans applied for yet</Text>
-        }
-      />
+          )}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No loans applied for yet</Text>
+          }
+        />
 
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Apply for Loan</Text>
+        <Modal visible={modalVisible} animationType="slide" transparent>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Apply for Loan</Text>
 
-            <Text style={styles.label}>Amount (KES)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. 10000"
-              placeholderTextColor="#999"
-              value={amount}
-              onChangeText={setAmount}
-              keyboardType="numeric"
-            />
+              <Text style={styles.label}>Amount (KES)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. 10000"
+                placeholderTextColor="#999"
+                value={amount}
+                onChangeText={setAmount}
+                keyboardType="numeric"
+              />
 
-            <Text style={styles.label}>Reason</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Medical emergency"
-              placeholderTextColor="#999"
-              value={reason}
-              onChangeText={setReason}
-            />
+              <Text style={styles.label}>Reason</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. Medical emergency"
+                placeholderTextColor="#999"
+                value={reason}
+                onChangeText={setReason}
+              />
 
-            <Text style={styles.label}>Repayment period (months)</Text>
-            <TextInput
-              style={styles.input}
-              value={period}
-              onChangeText={setPeriod}
-              keyboardType="numeric"
-            />
+              <Text style={styles.label}>Repayment period (months)</Text>
+              <TextInput
+                style={styles.input}
+                value={period}
+                onChangeText={setPeriod}
+                keyboardType="numeric"
+              />
 
-            <View style={styles.modalButtonRow}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setModalVisible(false)}
-                disabled={applying}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={handleApply}
-                disabled={applying}
-              >
-                {applying ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.submitButtonText}>Submit</Text>
-                )}
-              </TouchableOpacity>
+              <View style={styles.modalButtonRow}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => setModalVisible(false)}
+                  disabled={applying}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.submitButton}
+                  onPress={handleApply}
+                  disabled={applying}
+                >
+                  {applying ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.submitButtonText}>Submit</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: '#F5F7F5' },
   container: { flex: 1, backgroundColor: '#F5F7F5' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   headerRow: {

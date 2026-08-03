@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   RefreshControl
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { gql, useQuery } from '@apollo/client';
 import { useAuth } from '../../context/AuthContext';
 
@@ -51,21 +52,25 @@ export default function ContributionsScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2E7D32" />
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#2E7D32" />
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>Failed to load contributions</Text>
-        <Text style={styles.errorDetail}>{error.message}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>Failed to load contributions</Text>
+          <Text style={styles.errorDetail}>{error.message}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -73,40 +78,43 @@ export default function ContributionsScreen() {
   const total = contributions.reduce((sum, c) => sum + Number(c.amount), 0);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.summaryCard}>
-        <Text style={styles.summaryLabel}>Total Contributed</Text>
-        <Text style={styles.summaryValue}>{formatKES(total)}</Text>
-        <Text style={styles.summaryCount}>{contributions.length} contribution{contributions.length !== 1 ? 's' : ''}</Text>
-      </View>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.container}>
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryLabel}>Total Contributed</Text>
+          <Text style={styles.summaryValue}>{formatKES(total)}</Text>
+          <Text style={styles.summaryCount}>{contributions.length} contribution{contributions.length !== 1 ? 's' : ''}</Text>
+        </View>
 
-      <FlatList
-        data={contributions}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={refetch} colors={['#2E7D32']} />
-        }
-        renderItem={({ item }) => (
-          <View style={styles.row}>
-            <View>
-              <Text style={styles.monthText}>
-                {MONTH_NAMES[item.contribution_month - 1]} {item.contribution_year}
-              </Text>
-              <Text style={styles.dateText}>Recorded {formatDate(item.recorded_at)}</Text>
+        <FlatList
+          data={contributions}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={refetch} colors={['#2E7D32']} />
+          }
+          renderItem={({ item }) => (
+            <View style={styles.row}>
+              <View>
+                <Text style={styles.monthText}>
+                  {MONTH_NAMES[item.contribution_month - 1]} {item.contribution_year}
+                </Text>
+                <Text style={styles.dateText}>Recorded {formatDate(item.recorded_at)}</Text>
+              </View>
+              <Text style={styles.amountText}>{formatKES(item.amount)}</Text>
             </View>
-            <Text style={styles.amountText}>{formatKES(item.amount)}</Text>
-          </View>
-        )}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No contributions recorded yet</Text>
-        }
-      />
-    </View>
+          )}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No contributions recorded yet</Text>
+          }
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: '#F5F7F5' },
   container: { flex: 1, backgroundColor: '#F5F7F5' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   summaryCard: {

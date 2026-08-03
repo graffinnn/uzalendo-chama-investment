@@ -9,6 +9,7 @@ import {
   Alert,
   RefreshControl
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { gql, useQuery, useMutation, useLazyQuery } from '@apollo/client';
 
 const GET_ALL_LOANS = gql`
@@ -172,21 +173,25 @@ export default function ManageLoansScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2E7D32" />
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#2E7D32" />
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>Failed to load loans</Text>
-        <Text style={styles.errorDetail}>{error.message}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>Failed to load loans</Text>
+          <Text style={styles.errorDetail}>{error.message}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -194,112 +199,115 @@ export default function ManageLoansScreen() {
   const busy = approving || rejecting || recordingRepayment;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.headerTitle}>Loans ({loans.length})</Text>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.container}>
+        <Text style={styles.headerTitle}>Loans ({loans.length})</Text>
 
-      <FlatList
-        data={loans}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={refetch} colors={['#2E7D32']} />
-        }
-        renderItem={({ item }) => {
-          const isExpanded = expandedLoanId === item.id;
-          return (
-            <View style={styles.card}>
-              <TouchableOpacity onPress={() => handleToggleExpand(item)}>
-                <View style={styles.cardTop}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.memberName}>{item.member_name}</Text>
-                    <Text style={styles.memberNumber}>{item.member_number}</Text>
+        <FlatList
+          data={loans}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={refetch} colors={['#2E7D32']} />
+          }
+          renderItem={({ item }) => {
+            const isExpanded = expandedLoanId === item.id;
+            return (
+              <View style={styles.card}>
+                <TouchableOpacity onPress={() => handleToggleExpand(item)}>
+                  <View style={styles.cardTop}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.memberName}>{item.member_name}</Text>
+                      <Text style={styles.memberNumber}>{item.member_number}</Text>
+                    </View>
+                    <View style={[styles.statusBadge, { backgroundColor: statusColors[item.status] + '20' }]}>
+                      <Text style={[styles.statusText, { color: statusColors[item.status] }]}>
+                        {item.status.replace('_', ' ')}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={[styles.statusBadge, { backgroundColor: statusColors[item.status] + '20' }]}>
-                    <Text style={[styles.statusText, { color: statusColors[item.status] }]}>
-                      {item.status.replace('_', ' ')}
-                    </Text>
+
+                  <Text style={styles.loanAmount}>{formatKES(item.amount)}</Text>
+                  <Text style={styles.loanReason}>{item.reason}</Text>
+
+                  <View style={styles.statRow}>
+                    <Text style={styles.statLabel}>Period</Text>
+                    <Text style={styles.statValue}>{item.repayment_period_months} months @ {item.interest_rate}%</Text>
                   </View>
-                </View>
+                  <View style={styles.statRow}>
+                    <Text style={styles.statLabel}>Applied</Text>
+                    <Text style={styles.statValue}>{formatDate(item.applied_at)}</Text>
+                  </View>
+                </TouchableOpacity>
 
-                <Text style={styles.loanAmount}>{formatKES(item.amount)}</Text>
-                <Text style={styles.loanReason}>{item.reason}</Text>
+                {item.status === 'PENDING' && (
+                  <View style={styles.actionRow}>
+                    <TouchableOpacity
+                      style={styles.approveButton}
+                      onPress={() => handleApprove(item)}
+                      disabled={busy}
+                    >
+                      <Text style={styles.approveButtonText}>Approve</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.rejectButton}
+                      onPress={() => handleReject(item)}
+                      disabled={busy}
+                    >
+                      <Text style={styles.rejectButtonText}>Reject</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
 
-                <View style={styles.statRow}>
-                  <Text style={styles.statLabel}>Period</Text>
-                  <Text style={styles.statValue}>{item.repayment_period_months} months @ {item.interest_rate}%</Text>
-                </View>
-                <View style={styles.statRow}>
-                  <Text style={styles.statLabel}>Applied</Text>
-                  <Text style={styles.statValue}>{formatDate(item.applied_at)}</Text>
-                </View>
-              </TouchableOpacity>
-
-              {item.status === 'PENDING' && (
-                <View style={styles.actionRow}>
-                  <TouchableOpacity
-                    style={styles.approveButton}
-                    onPress={() => handleApprove(item)}
-                    disabled={busy}
-                  >
-                    <Text style={styles.approveButtonText}>Approve</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.rejectButton}
-                    onPress={() => handleReject(item)}
-                    disabled={busy}
-                  >
-                    <Text style={styles.rejectButtonText}>Reject</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {isExpanded && (
-                <View style={styles.scheduleSection}>
-                  <Text style={styles.scheduleTitle}>Repayment Schedule</Text>
-                  {detailLoading ? (
-                    <ActivityIndicator color="#2E7D32" style={{ marginTop: 8 }} />
-                  ) : detailData?.getLoan?.repayment_schedule?.length > 0 ? (
-                    detailData.getLoan.repayment_schedule.map((r) => (
-                      <View key={r.id} style={styles.repaymentRow}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.repaymentAmount}>{formatKES(r.amount)}</Text>
-                          <Text style={styles.repaymentDue}>Due {formatDate(r.due_date)}</Text>
+                {isExpanded && (
+                  <View style={styles.scheduleSection}>
+                    <Text style={styles.scheduleTitle}>Repayment Schedule</Text>
+                    {detailLoading ? (
+                      <ActivityIndicator color="#2E7D32" style={{ marginTop: 8 }} />
+                    ) : detailData?.getLoan?.repayment_schedule?.length > 0 ? (
+                      detailData.getLoan.repayment_schedule.map((r) => (
+                        <View key={r.id} style={styles.repaymentRow}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.repaymentAmount}>{formatKES(r.amount)}</Text>
+                            <Text style={styles.repaymentDue}>Due {formatDate(r.due_date)}</Text>
+                          </View>
+                          {r.status === 'PAID' ? (
+                            <Text style={styles.paidLabel}>PAID {formatDate(r.paid_date)}</Text>
+                          ) : (
+                            <TouchableOpacity
+                              style={[
+                                styles.markPaidButton,
+                                r.status === 'OVERDUE' && styles.markPaidButtonOverdue
+                              ]}
+                              onPress={() => handleRecordRepayment(r.id)}
+                              disabled={busy}
+                            >
+                              <Text style={styles.markPaidButtonText}>
+                                {r.status === 'OVERDUE' ? 'Overdue - Mark Paid' : 'Mark Paid'}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
                         </View>
-                        {r.status === 'PAID' ? (
-                          <Text style={styles.paidLabel}>PAID {formatDate(r.paid_date)}</Text>
-                        ) : (
-                          <TouchableOpacity
-                            style={[
-                              styles.markPaidButton,
-                              r.status === 'OVERDUE' && styles.markPaidButtonOverdue
-                            ]}
-                            onPress={() => handleRecordRepayment(r.id)}
-                            disabled={busy}
-                          >
-                            <Text style={styles.markPaidButtonText}>
-                              {r.status === 'OVERDUE' ? 'Overdue - Mark Paid' : 'Mark Paid'}
-                            </Text>
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    ))
-                  ) : (
-                    <Text style={styles.emptyText}>No repayment schedule yet</Text>
-                  )}
-                </View>
-              )}
-            </View>
-          );
-        }}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No loan applications yet</Text>
-        }
-      />
-    </View>
+                      ))
+                    ) : (
+                      <Text style={styles.emptyText}>No repayment schedule yet</Text>
+                    )}
+                  </View>
+                )}
+              </View>
+            );
+          }}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No loan applications yet</Text>
+          }
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: '#F5F7F5' },
   container: { flex: 1, backgroundColor: '#F5F7F5' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   headerTitle: {

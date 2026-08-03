@@ -9,6 +9,7 @@ import {
   Alert,
   RefreshControl
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { gql, useQuery, useMutation } from '@apollo/client';
 
 const GET_MEMBERS = gql`
@@ -87,21 +88,25 @@ export default function ManageMembersScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2E7D32" />
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#2E7D32" />
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>Failed to load members</Text>
-        <Text style={styles.errorDetail}>{error.message}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>Failed to load members</Text>
+          <Text style={styles.errorDetail}>{error.message}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -109,65 +114,68 @@ export default function ManageMembersScreen() {
   const busy = activating || deactivating;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.headerTitle}>Members ({members.length})</Text>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.container}>
+        <Text style={styles.headerTitle}>Members ({members.length})</Text>
 
-      <FlatList
-        data={members}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={refetch} colors={['#2E7D32']} />
-        }
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.cardTop}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.memberName}>{item.full_name}</Text>
-                <Text style={styles.memberNumber}>{item.member_number}</Text>
+        <FlatList
+          data={members}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={refetch} colors={['#2E7D32']} />
+          }
+          renderItem={({ item }) => (
+            <View style={styles.card}>
+              <View style={styles.cardTop}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.memberName}>{item.full_name}</Text>
+                  <Text style={styles.memberNumber}>{item.member_number}</Text>
+                </View>
+                <View style={[styles.statusBadge, { backgroundColor: statusColors[item.status] + '20' }]}>
+                  <Text style={[styles.statusText, { color: statusColors[item.status] }]}>
+                    {item.status}
+                  </Text>
+                </View>
               </View>
-              <View style={[styles.statusBadge, { backgroundColor: statusColors[item.status] + '20' }]}>
-                <Text style={[styles.statusText, { color: statusColors[item.status] }]}>
-                  {item.status}
-                </Text>
+
+              {item.overall_score !== null && (
+                <Text style={styles.scoreText}>Score: {Math.round(item.overall_score)}</Text>
+              )}
+
+              <View style={styles.actionRow}>
+                {item.status === 'PENDING' && (
+                  <TouchableOpacity
+                    style={styles.activateButton}
+                    onPress={() => handleActivate(item)}
+                    disabled={busy}
+                  >
+                    <Text style={styles.activateButtonText}>Activate</Text>
+                  </TouchableOpacity>
+                )}
+                {item.status === 'ACTIVE' && (
+                  <TouchableOpacity
+                    style={styles.deactivateButton}
+                    onPress={() => handleDeactivate(item)}
+                    disabled={busy}
+                  >
+                    <Text style={styles.deactivateButtonText}>Deactivate</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
-
-            {item.overall_score !== null && (
-              <Text style={styles.scoreText}>Score: {Math.round(item.overall_score)}</Text>
-            )}
-
-            <View style={styles.actionRow}>
-              {item.status === 'PENDING' && (
-                <TouchableOpacity
-                  style={styles.activateButton}
-                  onPress={() => handleActivate(item)}
-                  disabled={busy}
-                >
-                  <Text style={styles.activateButtonText}>Activate</Text>
-                </TouchableOpacity>
-              )}
-              {item.status === 'ACTIVE' && (
-                <TouchableOpacity
-                  style={styles.deactivateButton}
-                  onPress={() => handleDeactivate(item)}
-                  disabled={busy}
-                >
-                  <Text style={styles.deactivateButtonText}>Deactivate</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        )}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No members registered yet</Text>
-        }
-      />
-    </View>
+          )}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No members registered yet</Text>
+          }
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: '#F5F7F5' },
   container: { flex: 1, backgroundColor: '#F5F7F5' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   headerTitle: {

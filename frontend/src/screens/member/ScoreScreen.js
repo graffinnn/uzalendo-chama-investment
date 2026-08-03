@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   RefreshControl
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { gql, useQuery } from '@apollo/client';
 
 const GET_MY_SCORE_DATA = gql`
@@ -57,21 +58,25 @@ export default function ScoreScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2E7D32" />
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#2E7D32" />
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>Failed to load score</Text>
-        <Text style={styles.errorDetail}>{error.message}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>Failed to load score</Text>
+          <Text style={styles.errorDetail}>{error.message}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -80,61 +85,64 @@ export default function ScoreScreen() {
   const rounded = Math.round(score.overall_score);
 
   return (
-    <FlatList
-      style={styles.container}
-      data={history}
-      keyExtractor={(item) => item.id}
-      refreshControl={
-        <RefreshControl refreshing={loading} onRefresh={refetch} colors={['#2E7D32']} />
-      }
-      ListHeaderComponent={
-        <View>
-          <View style={[styles.scoreCircleWrap]}>
-            <View style={[styles.scoreCircle, { borderColor: scoreColor(rounded) }]}>
-              <Text style={[styles.scoreCircleValue, { color: scoreColor(rounded) }]}>
-                {rounded}
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <FlatList
+        style={styles.container}
+        data={history}
+        keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={refetch} colors={['#2E7D32']} />
+        }
+        ListHeaderComponent={
+          <View>
+            <View style={[styles.scoreCircleWrap]}>
+              <View style={[styles.scoreCircle, { borderColor: scoreColor(rounded) }]}>
+                <Text style={[styles.scoreCircleValue, { color: scoreColor(rounded) }]}>
+                  {rounded}
+                </Text>
+                <Text style={styles.scoreCircleMax}>/ 100</Text>
+              </View>
+              <Text style={[styles.scoreLabelText, { color: scoreColor(rounded) }]}>
+                {scoreLabel(rounded)}
               </Text>
-              <Text style={styles.scoreCircleMax}>/ 100</Text>
             </View>
-            <Text style={[styles.scoreLabelText, { color: scoreColor(rounded) }]}>
-              {scoreLabel(rounded)}
+
+            <View style={styles.breakdownRow}>
+              <View style={styles.breakdownCard}>
+                <Text style={styles.breakdownLabel}>Contribution Score</Text>
+                <Text style={styles.breakdownValue}>{Math.round(score.contribution_score)}</Text>
+              </View>
+              <View style={styles.breakdownCard}>
+                <Text style={styles.breakdownLabel}>Loan Score</Text>
+                <Text style={styles.breakdownValue}>{Math.round(score.loan_score)}</Text>
+              </View>
+            </View>
+
+            <Text style={styles.sectionTitle}>Score History</Text>
+          </View>
+        }
+        contentContainerStyle={styles.content}
+        renderItem={({ item }) => (
+          <View style={styles.historyRow}>
+            <View style={styles.historyLeft}>
+              <Text style={styles.historyReason}>{item.reason || 'Score recalculated'}</Text>
+              <Text style={styles.historyDate}>{formatDate(item.recorded_at)}</Text>
+            </View>
+            <Text style={[styles.historyScore, { color: scoreColor(item.overall_score) }]}>
+              {Math.round(item.overall_score)}
             </Text>
           </View>
-
-          <View style={styles.breakdownRow}>
-            <View style={styles.breakdownCard}>
-              <Text style={styles.breakdownLabel}>Contribution Score</Text>
-              <Text style={styles.breakdownValue}>{Math.round(score.contribution_score)}</Text>
-            </View>
-            <View style={styles.breakdownCard}>
-              <Text style={styles.breakdownLabel}>Loan Score</Text>
-              <Text style={styles.breakdownValue}>{Math.round(score.loan_score)}</Text>
-            </View>
-          </View>
-
-          <Text style={styles.sectionTitle}>Score History</Text>
-        </View>
-      }
-      contentContainerStyle={styles.content}
-      renderItem={({ item }) => (
-        <View style={styles.historyRow}>
-          <View style={styles.historyLeft}>
-            <Text style={styles.historyReason}>{item.reason || 'Score recalculated'}</Text>
-            <Text style={styles.historyDate}>{formatDate(item.recorded_at)}</Text>
-          </View>
-          <Text style={[styles.historyScore, { color: scoreColor(item.overall_score) }]}>
-            {Math.round(item.overall_score)}
-          </Text>
-        </View>
-      )}
-      ListEmptyComponent={
-        <Text style={styles.emptyText}>No score history yet</Text>
-      }
-    />
+        )}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>No score history yet</Text>
+        }
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: '#F5F7F5' },
   container: { flex: 1, backgroundColor: '#F5F7F5' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   content: { padding: 16, paddingBottom: 40 },
