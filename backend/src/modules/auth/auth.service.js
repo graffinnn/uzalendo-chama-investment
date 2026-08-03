@@ -92,20 +92,20 @@ const registerMember = async (input) => {
   const member_number = `UZA${String(count).padStart(3, '0')}`;
   const password_hash = await hashPassword(password);
 
-  const [insertResult] = await sequelize.query(
-    'INSERT INTO members (chama_id, full_name, phone, national_id, member_number, password_hash, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+  const insertResultArray = await sequelize.query(
+    'INSERT INTO members SET chama_id = ?, full_name = ?, phone = ?, national_id = ?, member_number = ?, password_hash = ?, status = ?',
     { replacements: [chama[0].id, full_name, phone, national_id, member_number, password_hash, 'PENDING'] }
   );
 
-  const memberId = insertResult.insertId;
+  const memberId = insertResultArray[0];
 
   await sequelize.query(
-    'INSERT INTO member_scores (member_id) VALUES (?)',
+    'INSERT INTO member_scores SET member_id = ?',
     { replacements: [memberId] }
   );
 
   await sequelize.query(
-    'INSERT INTO audit_logs (performed_by_member, action, target_table, target_id, details) VALUES (?, ?, ?, ?, ?)',
+    'INSERT INTO audit_logs SET performed_by_member = ?, action = ?, target_table = ?, target_id = ?, details = ?',
     { replacements: [memberId, 'MEMBER_REGISTERED', 'members', memberId, `Member ${member_number} registered and pending activation`] }
   );
 

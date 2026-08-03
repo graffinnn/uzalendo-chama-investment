@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { gql, useQuery } from '@apollo/client';
 import { useAuth } from '../../context/AuthContext';
 
@@ -72,146 +73,153 @@ export default function AdminDashboardScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2E7D32" />
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#2E7D32" />
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>Failed to load dashboard</Text>
-        <Text style={styles.errorDetail}>{error.message}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>Failed to load dashboard</Text>
+          <Text style={styles.errorDetail}>{error.message}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
   const d = data.getAdminDashboard;
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={
-        <RefreshControl refreshing={loading} onRefresh={refetch} colors={['#2E7D32']} />
-      }
-    >
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Welcome back,</Text>
-          <Text style={styles.adminName}>{user?.full_name || 'Treasurer'}</Text>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={refetch} colors={['#2E7D32']} />
+        }
+      >
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>Welcome back,</Text>
+            <Text style={styles.adminName}>{user?.full_name || 'Treasurer'}</Text>
+          </View>
+          <TouchableOpacity onPress={logout}>
+            <Text style={styles.logoutText}>Log Out</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={logout}>
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
-      </View>
 
-      <View style={styles.cardRow}>
-        <View style={[styles.card, styles.cardHalf]}>
-          <Text style={styles.cardLabel}>Pool Funds</Text>
-          <Text style={styles.cardValue}>{formatKES(d.pool_funds_total)}</Text>
+        <View style={styles.cardRow}>
+          <View style={[styles.card, styles.cardHalf]}>
+            <Text style={styles.cardLabel}>Pool Funds</Text>
+            <Text style={styles.cardValue}>{formatKES(d.pool_funds_total)}</Text>
+          </View>
+          <View style={[styles.card, styles.cardHalf]}>
+            <Text style={styles.cardLabel}>Savings</Text>
+            <Text style={styles.cardValue}>{formatKES(d.savings_total)}</Text>
+          </View>
         </View>
-        <View style={[styles.card, styles.cardHalf]}>
-          <Text style={styles.cardLabel}>Savings</Text>
-          <Text style={styles.cardValue}>{formatKES(d.savings_total)}</Text>
-        </View>
-      </View>
 
-      <View style={styles.cardRow}>
-        <View style={[styles.card, styles.cardHalf]}>
-          <Text style={styles.cardLabel}>Portfolio Value</Text>
-          <Text style={styles.cardValue}>{formatKES(d.portfolio_total)}</Text>
+        <View style={styles.cardRow}>
+          <View style={[styles.card, styles.cardHalf]}>
+            <Text style={styles.cardLabel}>Portfolio Value</Text>
+            <Text style={styles.cardValue}>{formatKES(d.portfolio_total)}</Text>
+          </View>
+          <View style={[styles.card, styles.cardHalf]}>
+            <Text style={styles.cardLabel}>Members</Text>
+            <Text style={styles.cardValue}>{d.member_counts.total}</Text>
+            <Text style={styles.cardSubtext}>
+              {d.member_counts.active} active · {d.member_counts.pending} pending
+            </Text>
+          </View>
         </View>
-        <View style={[styles.card, styles.cardHalf]}>
-          <Text style={styles.cardLabel}>Members</Text>
-          <Text style={styles.cardValue}>{d.member_counts.total}</Text>
-          <Text style={styles.cardSubtext}>
-            {d.member_counts.active} active · {d.member_counts.pending} pending
-          </Text>
-        </View>
-      </View>
 
-      <Text style={styles.sectionTitle}>Loans</Text>
-      <View style={styles.card}>
-        <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Active loans</Text>
-          <Text style={styles.statValue}>{d.loan_summary.active_count} ({formatKES(d.loan_summary.active_total)})</Text>
+        <Text style={styles.sectionTitle}>Loans</Text>
+        <View style={styles.card}>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>Active loans</Text>
+            <Text style={styles.statValue}>{d.loan_summary.active_count} ({formatKES(d.loan_summary.active_total)})</Text>
+          </View>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>Pending approval</Text>
+            <Text style={styles.statValue}>{d.loan_summary.pending_approval_count}</Text>
+          </View>
+          <View style={styles.statRow}>
+            <Text style={[styles.statLabel, d.loan_summary.overdue_count > 0 && styles.warningText]}>
+              Overdue repayments
+            </Text>
+            <Text style={[styles.statValue, d.loan_summary.overdue_count > 0 && styles.warningText]}>
+              {d.loan_summary.overdue_count}
+            </Text>
+          </View>
         </View>
-        <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Pending approval</Text>
-          <Text style={styles.statValue}>{d.loan_summary.pending_approval_count}</Text>
+
+        <Text style={styles.sectionTitle}>Current Cycle</Text>
+        <View style={styles.card}>
+          {d.cycle_status.has_active_cycle ? (
+            <>
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Next payout</Text>
+                <Text style={styles.statValue}>{d.cycle_status.next_payout_member || '—'}</Text>
+              </View>
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Payout date</Text>
+                <Text style={styles.statValue}>{formatDate(d.cycle_status.next_payout_date)}</Text>
+              </View>
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Amount</Text>
+                <Text style={styles.statValue}>{formatKES(d.cycle_status.payout_amount)}</Text>
+              </View>
+            </>
+          ) : (
+            <Text style={styles.emptyText}>No active cycle</Text>
+          )}
         </View>
-        <View style={styles.statRow}>
-          <Text style={[styles.statLabel, d.loan_summary.overdue_count > 0 && styles.warningText]}>
-            Overdue repayments
-          </Text>
-          <Text style={[styles.statValue, d.loan_summary.overdue_count > 0 && styles.warningText]}>
-            {d.loan_summary.overdue_count}
-          </Text>
+
+        <Text style={styles.sectionTitle}>Top Members</Text>
+        <View style={styles.card}>
+          {d.top_members.length === 0 ? (
+            <Text style={styles.emptyText}>No scored members yet</Text>
+          ) : (
+            d.top_members.map((m, i) => (
+              <View key={m.member_number} style={styles.statRow}>
+                <Text style={styles.statLabel}>{i + 1}. {m.full_name}</Text>
+                <Text style={styles.scoreValue}>{Math.round(m.overall_score)}</Text>
+              </View>
+            ))
+          )}
         </View>
-      </View>
 
-      <Text style={styles.sectionTitle}>Current Cycle</Text>
-      <View style={styles.card}>
-        {d.cycle_status.has_active_cycle ? (
-          <>
-            <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Next payout</Text>
-              <Text style={styles.statValue}>{d.cycle_status.next_payout_member || '—'}</Text>
-            </View>
-            <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Payout date</Text>
-              <Text style={styles.statValue}>{formatDate(d.cycle_status.next_payout_date)}</Text>
-            </View>
-            <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Amount</Text>
-              <Text style={styles.statValue}>{formatKES(d.cycle_status.payout_amount)}</Text>
-            </View>
-          </>
-        ) : (
-          <Text style={styles.emptyText}>No active cycle</Text>
-        )}
-      </View>
-
-      <Text style={styles.sectionTitle}>Top Members</Text>
-      <View style={styles.card}>
-        {d.top_members.length === 0 ? (
-          <Text style={styles.emptyText}>No scored members yet</Text>
-        ) : (
-          d.top_members.map((m, i) => (
-            <View key={m.member_number} style={styles.statRow}>
-              <Text style={styles.statLabel}>{i + 1}. {m.full_name}</Text>
-              <Text style={styles.scoreValue}>{Math.round(m.overall_score)}</Text>
-            </View>
-          ))
-        )}
-      </View>
-
-      <Text style={styles.sectionTitle}>Recent Activity</Text>
-      <View style={styles.card}>
-        {d.recent_activity.length === 0 ? (
-          <Text style={styles.emptyText}>No recent activity</Text>
-        ) : (
-          d.recent_activity.map((log) => (
-            <View key={log.id} style={styles.activityRow}>
-              <Text style={styles.activityAction}>{log.action.replace(/_/g, ' ')}</Text>
-              <Text style={styles.activityDetails}>{log.details}</Text>
-              <Text style={styles.activityMeta}>
-                {log.performed_by} · {formatDate(log.performed_at)}
-              </Text>
-            </View>
-          ))
-        )}
-      </View>
-    </ScrollView>
+        <Text style={styles.sectionTitle}>Recent Activity</Text>
+        <View style={styles.card}>
+          {d.recent_activity.length === 0 ? (
+            <Text style={styles.emptyText}>No recent activity</Text>
+          ) : (
+            d.recent_activity.map((log) => (
+              <View key={log.id} style={styles.activityRow}>
+                <Text style={styles.activityAction}>{log.action.replace(/_/g, ' ')}</Text>
+                <Text style={styles.activityDetails}>{log.details}</Text>
+                <Text style={styles.activityMeta}>
+                  {log.performed_by} · {formatDate(log.performed_at)}
+                </Text>
+              </View>
+            ))
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: '#F5F7F5' },
   container: { flex: 1, backgroundColor: '#F5F7F5' },
   content: { padding: 16, paddingBottom: 40 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
