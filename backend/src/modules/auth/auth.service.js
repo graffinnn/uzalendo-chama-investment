@@ -22,14 +22,16 @@ const registerAdmin = async (input) => {
 
   const password_hash = await hashPassword(password);
 
-  const [insertResult] = await sequelize.query(
-    'INSERT INTO admins (chama_id, full_name, email, phone, password_hash) VALUES (?, ?, ?, ?, ?)',
+  const insertResultArray = await sequelize.query(
+    'INSERT INTO admins SET chama_id = ?, full_name = ?, email = ?, phone = ?, password_hash = ?',
     { replacements: [chama[0].id, full_name, email, phone, password_hash] }
   );
 
+  const adminId = insertResultArray[0];
+
   const [admin] = await sequelize.query(
     'SELECT id, full_name, email, phone, created_at FROM admins WHERE id = ?',
-    { replacements: [insertResult.insertId] }
+    { replacements: [adminId] }
   );
 
   return admin[0];
