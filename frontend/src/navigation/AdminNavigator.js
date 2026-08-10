@@ -5,6 +5,7 @@ import ManageMembersScreen from '../screens/admin/ManageMembersScreen';
 import RecordContributionScreen from '../screens/admin/RecordContributionScreen';
 import ManageLoansScreen from '../screens/admin/ManageLoansScreen';
 import ManageSavingsScreen from '../screens/admin/ManageSavingsScreen';
+import ManageCyclesScreen from '../screens/admin/ManageCyclesScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -16,6 +17,7 @@ export default function AdminNavigator() {
       <Tab.Screen name="Record" component={RecordContributionScreen} />
       <Tab.Screen name="Loans" component={ManageLoansScreen} />
       <Tab.Screen name="Savings" component={ManageSavingsScreen} />
+      <Tab.Screen name="Cycles" component={ManageCyclesScreen} />
     </Tab.Navigator>
   );
 }

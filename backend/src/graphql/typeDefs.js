@@ -28,6 +28,7 @@ const typeDefs = gql`
     getInvestment(investmentId: ID!): Investment!
     getMyPortfolioShare: PortfolioShare!
     getAdminDashboard: AdminDashboard!
+    getCycleHistory: [Cycle!]!
   }
 
   type Mutation {

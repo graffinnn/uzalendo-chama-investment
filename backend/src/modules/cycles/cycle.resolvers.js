@@ -1,4 +1,4 @@
-const { createCycle, getCurrentCycle, getMyCyclePosition, getCyclePositions, completeCycle } = require('./cycle.service');
+const { createCycle, getCurrentCycle, getMyCyclePosition, getCyclePositions, completeCycle, getCycleHistory } = require('./cycle.service');
 
 const cycleResolvers = {
   Query: {
@@ -13,6 +13,10 @@ const cycleResolvers = {
     getCyclePositions: async (_, { cycleId }, { user }) => {
       if (!user) throw new Error('Authentication required.');
       return getCyclePositions(cycleId);
+    },
+    getCycleHistory: async (_, __, { user }) => {
+      if (!user || user.role !== 'ADMIN') throw new Error('Admin access required.');
+      return getCycleHistory();
     }
   },
   Mutation: {

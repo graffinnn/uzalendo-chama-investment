@@ -131,4 +131,22 @@ const completeCycle = async (cycleId, adminId) => {
   return getCycleById(cycleId);
 };
 
-module.exports = { createCycle, getCurrentCycle, getMyCyclePosition, getCyclePositions, completeCycle };
+const getCycleHistory = async () => {
+  const [chama] = await sequelize.query('SELECT id FROM chamas LIMIT 1');
+
+  const [cycles] = await sequelize.query(
+    "SELECT id, payout_amount, start_date, status, created_at FROM cycles WHERE chama_id = ? ORDER BY created_at DESC",
+    { replacements: [chama[0].id] }
+  );
+
+  const cyclesWithPositions = await Promise.all(
+    cycles.map(async (cycle) => {
+      const positions = await getCyclePositions(cycle.id);
+      return { ...cycle, positions };
+    })
+  );
+
+  return cyclesWithPositions;
+};
+
+module.exports = { createCycle, getCurrentCycle, getMyCyclePosition, getCyclePositions, completeCycle, getCycleHistory };
