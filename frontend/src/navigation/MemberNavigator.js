@@ -2,8 +2,9 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import MemberDashboardScreen from '../screens/member/MemberDashboardScreen';
 import ContributionsScreen from '../screens/member/ContributionsScreen';
-import LoansScreen from '../screens/member/LoansScreen';
 import SavingsScreen from '../screens/member/SavingsScreen';
+import LoansScreen from '../screens/member/LoansScreen';
+import PortfolioScreen from '../screens/member/PortfolioScreen';
 import ScoreScreen from '../screens/member/ScoreScreen';
 
 const Tab = createBottomTabNavigator();
@@ -15,6 +16,7 @@ export default function MemberNavigator() {
       <Tab.Screen name="Contributions" component={ContributionsScreen} />
       <Tab.Screen name="Savings" component={SavingsScreen} />
       <Tab.Screen name="Loans" component={LoansScreen} />
+      <Tab.Screen name="Portfolio" component={PortfolioScreen} />
       <Tab.Screen name="Score" component={ScoreScreen} />
     </Tab.Navigator>
   );
