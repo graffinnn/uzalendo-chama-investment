@@ -85,12 +85,16 @@ const registerMember = async (input) => {
     throw new Error('No Chama found. Please seed the database first.');
   }
 
-  const [countResult] = await sequelize.query(
-    'SELECT COUNT(*) AS total FROM members WHERE chama_id = ?',
+  const [maxResult] = await sequelize.query(
+    "SELECT member_number FROM members WHERE chama_id = ? ORDER BY CAST(SUBSTRING(member_number, 4) AS UNSIGNED) DESC LIMIT 1",
     { replacements: [chama[0].id] }
   );
 
-  const count = Number(countResult[0].total) + 1;
+  const highestNumber = maxResult.length > 0
+    ? parseInt(maxResult[0].member_number.replace('UZA', ''), 10)
+    : 0;
+
+  const count = highestNumber + 1;
   const member_number = `UZA${String(count).padStart(3, '0')}`;
   const password_hash = await hashPassword(password);
 
