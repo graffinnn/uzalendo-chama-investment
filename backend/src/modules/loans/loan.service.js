@@ -25,19 +25,46 @@ const applyForLoan = async (input, memberId) => {
   const reason = input.reason;
 
   const members = await query(
-    'SELECT id, status FROM members WHERE id = ?',
+    'SELECT id, status, joined_at FROM members WHERE id = ?',
     [memberId]
   );
   if (!members || members.length === 0) throw new Error('Member not found.');
   if (members[0].status !== 'ACTIVE') throw new Error('Your account is not active.');
 
-  const scores = await query(
+  const joinedDate = new Date(members[0].joined_at);
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+  if (joinedDate > sixMonthsAgo) {
+    const monthsRemaining = Math.ceil((sixMonthsAgo - joinedDate) / (1000 * 60 * 60 * 24 * 30) * -1);
+    throw new Error(`You must be a member for at least 6 months before applying for a loan. ${monthsRemaining > 0 ? monthsRemaining + ' month(s) remaining.' : ''}`);
+  }
+
+  const savingsResult = await query(
+    "SELECT COALESCE(SUM(CASE WHEN transaction_type IN ('DEPOSIT','INTEREST','PROFIT_SHARE') THEN amount ELSE 0 END), 0) as total_in, COALESCE(SUM(CASE WHEN transaction_type = 'WITHDRAWAL' THEN amount ELSE 0 END), 0) as total_out FROM savings WHERE member_id = ?",
+    [memberId]
+  );
+  const savingsBalance = Number(savingsResult[0].total_in) - Number(savingsResult[0].total_out);
+  const maxLoanAmount = savingsBalance * 2;
+
+  if (savingsBalance <= 0) {
+    throw new Error('You need a savings balance before you can apply for a loan.');
+  }
+
+  if (amount > maxLoanAmount) {
+    throw new Error(`Loan amount exceeds your limit. Your savings balance is KES ${savingsBalance}, so your maximum loan is KES ${maxLoanAmount}.`);
+  }
+
+  const scoreResult = await query(
     'SELECT overall_score FROM member_scores WHERE member_id = ?',
     [memberId]
   );
-  const score = scores && scores.length > 0 ? parseFloat(scores[0].overall_score) : 50;
-  if (score < 60) throw new Error(`Your member score (${score}) is below the minimum required score of 60 to apply for a loan.`);
+  const score = scoreResult && scoreResult.length > 0 ? Number(scoreResult[0].overall_score) : 50;
 
+  if (score < 60) {
+    throw new Error(`Your reliability score (${Math.round(score)}) is below the minimum required score of 60 to apply for a loan.`);
+  }  
+  
   const cycleCheck = await query(
     "SELECT cp.id FROM cycle_positions cp JOIN cycles c ON c.id = cp.cycle_id WHERE cp.member_id = ? AND c.status = 'ACTIVE'",
     [memberId]
@@ -54,19 +81,19 @@ const applyForLoan = async (input, memberId) => {
     throw new Error('You already have an active or pending loan.');
   }
 
-  const loanId = await insert(
+  const [insertResultArray] = await sequelize.query(
     'INSERT INTO loans SET member_id = ?, amount = ?, reason = ?, repayment_period_months = ?, interest_rate = 10.00',
-    [memberId, amount, reason, period]
+    { replacements: [memberId, amount, reason, period] }
   );
 
-  await insert(
+  await query(
     'INSERT INTO audit_logs SET performed_by_member = ?, action = ?, target_table = ?, target_id = ?, details = ?',
-    [memberId, 'LOAN_APPLIED', 'loans', loanId, `Loan application of KES ${amount} for ${period} months`]
+    [memberId, 'LOAN_APPLIED', 'loans', insertResultArray, `Loan application of KES ${amount} for ${period} months`]
   );
 
   const loans = await query(
     'SELECT id, amount, reason, repayment_period_months, interest_rate, status, applied_at FROM loans WHERE id = ?',
-    [loanId]
+    [insertResultArray]
   );
 
   return loans[0];
