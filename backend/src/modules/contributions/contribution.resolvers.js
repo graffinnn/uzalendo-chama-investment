@@ -21,8 +21,16 @@ const contributionResolvers = {
   },
   Mutation: {
     recordContribution: async (_, { input }, { user }) => {
-      if (!user || user.role !== 'ADMIN') throw new Error('Admin access required.');
-      return recordContribution(input, user.id);
+      if (!user) throw new Error('Authentication required.');
+
+      if (user.role === 'MEMBER') {
+        if (parseInt(input.member_id) !== user.id) {
+          throw new Error('You can only record contributions for yourself.');
+        }
+        return recordContribution(input, user.id, true);
+      }
+
+      return recordContribution(input, user.id, false);
     }
   }
 };
