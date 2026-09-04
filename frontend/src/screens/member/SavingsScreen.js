@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { gql, useQuery, useMutation } from '@apollo/client';
+import { useAuth } from '../../context/AuthContext';
 
 const GET_MY_SAVINGS_DATA = gql`
   query GetMySavingsData {
@@ -34,6 +35,16 @@ const REQUEST_WITHDRAWAL = gql`
       amount
       status
       reason
+    }
+  }
+`;
+
+const RECORD_SAVINGS = gql`
+  mutation RecordSavings($input: RecordSavingsInput!) {
+    recordSavings(input: $input) {
+      id
+      amount
+      transaction_type
     }
   }
 `;
@@ -65,9 +76,13 @@ const formatDate = (value) => {
 };
 
 export default function SavingsScreen() {
-  const [modalVisible, setModalVisible] = useState(false);
+  const { user } = useAuth();
+  const [withdrawModalVisible, setWithdrawModalVisible] = useState(false);
+  const [depositModalVisible, setDepositModalVisible] = useState(false);
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
+  const [depositAmount, setDepositAmount] = useState('');
+  const [depositNotes, setDepositNotes] = useState('');
 
   const { data, loading, error, refetch } = useQuery(GET_MY_SAVINGS_DATA, {
     fetchPolicy: 'network-only'
@@ -76,12 +91,23 @@ export default function SavingsScreen() {
   const [requestWithdrawal, { loading: submitting }] = useMutation(REQUEST_WITHDRAWAL, {
     onCompleted: () => {
       Alert.alert('Success', 'Your withdrawal request has been submitted for approval.');
-      setModalVisible(false);
+      setWithdrawModalVisible(false);
       setAmount('');
       setReason('');
       refetch();
     },
     onError: (err) => Alert.alert('Request failed', err.message)
+  });
+
+  const [recordSavings, { loading: depositing }] = useMutation(RECORD_SAVINGS, {
+    onCompleted: () => {
+      Alert.alert('Success', 'Your deposit has been recorded.');
+      setDepositModalVisible(false);
+      setDepositAmount('');
+      setDepositNotes('');
+      refetch();
+    },
+    onError: (err) => Alert.alert('Deposit failed', err.message)
   });
 
   const handleRequest = () => {
@@ -95,6 +121,24 @@ export default function SavingsScreen() {
         input: {
           amount: Number(amount),
           reason: reason.trim() || undefined
+        }
+      }
+    });
+  };
+
+  const handleDeposit = () => {
+    if (!depositAmount || isNaN(Number(depositAmount)) || Number(depositAmount) <= 0) {
+      Alert.alert('Invalid amount', 'Please enter a valid deposit amount.');
+      return;
+    }
+
+    recordSavings({
+      variables: {
+        input: {
+          member_id: user.id,
+          amount: Number(depositAmount),
+          transaction_type: 'DEPOSIT',
+          notes: depositNotes.trim() || undefined
         }
       }
     });
@@ -141,12 +185,20 @@ export default function SavingsScreen() {
             <View style={styles.balanceCard}>
               <Text style={styles.balanceLabel}>Savings Balance</Text>
               <Text style={styles.balanceValue}>{formatKES(balance)}</Text>
-              <TouchableOpacity
-                style={styles.withdrawButton}
-                onPress={() => setModalVisible(true)}
-              >
-                <Text style={styles.withdrawButtonText}>Request Withdrawal</Text>
-              </TouchableOpacity>
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={styles.depositButton}
+                  onPress={() => setDepositModalVisible(true)}
+                >
+                  <Text style={styles.depositButtonText}>Deposit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.withdrawButton}
+                  onPress={() => setWithdrawModalVisible(true)}
+                >
+                  <Text style={styles.withdrawButtonText}>Withdraw</Text>
+                </TouchableOpacity>
+              </View>
             </View>
             <Text style={styles.sectionTitle}>Transaction History</Text>
           </View>
@@ -174,7 +226,55 @@ export default function SavingsScreen() {
         }
       />
 
-      <Modal visible={modalVisible} animationType="slide" transparent>
+      <Modal visible={depositModalVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Deposit Savings</Text>
+
+            <Text style={styles.label}>Amount (KES)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. 5000"
+              placeholderTextColor="#999"
+              value={depositAmount}
+              onChangeText={setDepositAmount}
+              keyboardType="numeric"
+            />
+
+            <Text style={styles.label}>Notes (optional)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. Monthly voluntary savings"
+              placeholderTextColor="#999"
+              value={depositNotes}
+              onChangeText={setDepositNotes}
+            />
+
+            <View style={styles.modalButtonRow}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setDepositModalVisible(false)}
+                disabled={depositing}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={handleDeposit}
+                disabled={depositing}
+              >
+                {depositing ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.submitButtonText}>Deposit</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={withdrawModalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Request Withdrawal</Text>
@@ -202,7 +302,7 @@ export default function SavingsScreen() {
             <View style={styles.modalButtonRow}>
               <TouchableOpacity
                 style={styles.cancelButton}
-                onPress={() => setModalVisible(false)}
+                onPress={() => setWithdrawModalVisible(false)}
                 disabled={submitting}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -240,13 +340,23 @@ const styles = StyleSheet.create({
   },
   balanceLabel: { fontSize: 13, color: '#C8E6C9' },
   balanceValue: { fontSize: 32, fontWeight: '800', color: '#fff', marginTop: 4, marginBottom: 16 },
-  withdrawButton: {
+  buttonRow: { flexDirection: 'row', gap: 10 },
+  depositButton: {
     backgroundColor: '#fff',
     paddingVertical: 10,
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     borderRadius: 10
   },
-  withdrawButtonText: { color: '#1B5E20', fontWeight: '700', fontSize: 13 },
+  depositButtonText: { color: '#1B5E20', fontWeight: '700', fontSize: 13 },
+  withdrawButton: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#fff'
+  },
+  withdrawButtonText: { color: '#fff', fontWeight: '700', fontSize: 13 },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: '#333', marginBottom: 10 },
   row: {
     flexDirection: 'row',

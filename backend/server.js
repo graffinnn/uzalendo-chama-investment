@@ -8,9 +8,12 @@ const sequelize = require('./src/config/database');
 const typeDefs = require('./src/graphql/typeDefs');
 const resolvers = require('./src/graphql/resolvers');
 const { getAuthUser } = require('./src/middleware/authMiddleware');
+const mpesaRoutes = require('./src/modules/mpesa/mpesa.routes');
 
 async function startServer() {
   const app = express();
+
+  app.use('/api/mpesa', express.json(), mpesaRoutes);
 
   const server = new ApolloServer({
     typeDefs,

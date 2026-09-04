@@ -29,6 +29,7 @@ const typeDefs = gql`
     getMyPortfolioShare: PortfolioShare!
     getAdminDashboard: AdminDashboard!
     getCycleHistory: [Cycle!]!
+    getMpesaTransactionStatus(checkoutRequestId: String!): MpesaTransactionStatus!
   }
 
   type Mutation {
@@ -50,6 +51,7 @@ const typeDefs = gql`
     recordRepayment(repaymentId: ID!): LoanRepayment!
     addInvestment(input: AddInvestmentInput!): Investment!
     updateInvestmentValue(investmentId: ID!, newValue: Float!): Investment!
+    initiateStkPush(input: InitiateStkPushInput!): StkPushResult!
   }
 
   type Admin {
@@ -263,6 +265,19 @@ const typeDefs = gql`
   performed_by: String
   }
 
+  type StkPushResult {
+    checkoutRequestId: String!
+    merchantRequestId: String
+    responseCode: String
+    responseDescription: String
+    customerMessage: String
+  }
+
+  type MpesaTransactionStatus {
+    status: String!
+    result_description: String
+  }
+
   input AddInvestmentInput {
   name: String!
   investment_type: String!
@@ -321,6 +336,14 @@ const typeDefs = gql`
     amount: Float!
     reason: String!
     repayment_period_months: Int!
+  }
+
+  input InitiateStkPushInput {
+    phone: String!
+    amount: Float!
+    purpose: String!
+    contributionMonth: Int
+    contributionYear: Int
   }
 `;
 
