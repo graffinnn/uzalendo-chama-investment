@@ -1,9 +1,10 @@
 ﻿import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from './apiConfig';
 
 const httpLink = createHttpLink({
-  uri: 'http://192.168.1.70:4000/graphql'
+  uri: `${API_BASE_URL}/graphql`
 });
 
 const authLink = setContext(async (_, { headers }) => {
@@ -22,3 +23,4 @@ const client = new ApolloClient({
 });
 
 export default client;
+

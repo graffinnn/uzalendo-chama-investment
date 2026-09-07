@@ -29,6 +29,9 @@ async function startServer() {
   await server.start();
   server.applyMiddleware({ app, path: '/graphql' });
 
+  const reportsRoutes = require('./src/modules/reports/reports.routes');
+  app.use('/api/reports', reportsRoutes);
+  
   try {
     await sequelize.authenticate();
     console.log('Database connection established successfully.');

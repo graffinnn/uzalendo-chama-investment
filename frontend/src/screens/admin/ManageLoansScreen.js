@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { gql, useQuery, useMutation, useLazyQuery } from '@apollo/client';
+import ReportButton from '../../components/ReportButton';
 
 const GET_ALL_LOANS = gql`
   query GetAllLoans {
@@ -201,7 +202,19 @@ export default function ManageLoansScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.container}>
-        <Text style={styles.headerTitle}>Loans ({loans.length})</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.headerTitle}>Loans ({loans.length})</Text>
+        </View>
+
+        <View style={styles.reportRow}>
+          <ReportButton
+            reportPath="loan-portfolio"
+            filename="loan-portfolio.pdf"
+            label="Download Loan Portfolio"
+            style={styles.reportButton}
+            textStyle={styles.reportButtonText}
+          />
+        </View>
 
         <FlatList
           data={loans}
@@ -310,13 +323,35 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#F5F7F5' },
   container: { flex: 1, backgroundColor: '#F5F7F5' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
+  headerRow: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 4
+  },
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1B5E20',
+    color: '#1B5E20'
+  },
+  reportRow: {
     paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8
+    marginBottom: 8
+  },
+  reportButton: {
+    marginTop: 0,
+    alignSelf: 'flex-start',
+    minWidth: undefined,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#2E7D32',
+    backgroundColor: '#E8F5E9'
+  },
+  reportButtonText: {
+    color: '#1B5E20',
+    fontWeight: '700',
+    fontSize: 12
   },
   list: { padding: 16, paddingTop: 4 },
   card: {

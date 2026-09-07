@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { gql, useQuery, useMutation } from '@apollo/client';
+import ReportButton from '../../components/ReportButton';
 
 const GET_MEMBERS = gql`
   query GetMembers {
@@ -162,6 +163,13 @@ export default function ManageMembersScreen() {
                     <Text style={styles.deactivateButtonText}>Deactivate</Text>
                   </TouchableOpacity>
                 )}
+                <ReportButton
+                  reportPath={`member-statement/${item.id}`}
+                  filename={`member-statement-${item.member_number}.pdf`}
+                  label="Statement"
+                  style={styles.statementButton}
+                  textStyle={styles.statementButtonText}
+                />
               </View>
             </View>
           )}
@@ -208,7 +216,7 @@ const styles = StyleSheet.create({
   },
   statusText: { fontSize: 11, fontWeight: '700' },
   scoreText: { fontSize: 13, color: '#2E7D32', marginTop: 8, fontWeight: '600' },
-  actionRow: { flexDirection: 'row', marginTop: 12 },
+  actionRow: { flexDirection: 'row', gap: 10, marginTop: 12, flexWrap: 'wrap' },
   activateButton: {
     backgroundColor: '#2E7D32',
     paddingVertical: 8,
@@ -223,6 +231,22 @@ const styles = StyleSheet.create({
     borderRadius: 8
   },
   deactivateButtonText: { color: '#C62828', fontWeight: '700', fontSize: 13 },
+  statementButton: {
+    marginTop: 0,
+    alignSelf: 'flex-start',
+    minWidth: undefined,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#2E7D32',
+    backgroundColor: '#E8F5E9'
+  },
+  statementButtonText: {
+    color: '#1B5E20',
+    fontWeight: '700',
+    fontSize: 13
+  },
   emptyText: { textAlign: 'center', color: '#999', marginTop: 40, fontStyle: 'italic' },
   errorText: { fontSize: 16, fontWeight: '700', color: '#C62828', marginBottom: 8 },
   errorDetail: { fontSize: 13, color: '#777', textAlign: 'center', marginBottom: 16 },

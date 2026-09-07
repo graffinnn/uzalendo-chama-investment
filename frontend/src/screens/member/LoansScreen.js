@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { gql, useQuery, useMutation } from '@apollo/client';
+import ReportButton from '../../components/ReportButton';
 
 const GET_MY_LOANS = gql`
   query GetMyLoans {
@@ -146,6 +147,16 @@ export default function LoansScreen() {
           </TouchableOpacity>
         </View>
 
+        <View style={styles.reportRow}>
+          <ReportButton
+            reportPath="loan-history"
+            filename="loan-history.pdf"
+            label="Download Loan History"
+            style={styles.reportButton}
+            textStyle={styles.reportButtonText}
+          />
+        </View>
+
         {hasActiveLoan && (
           <Text style={styles.noticeText}>
             You already have a pending or active loan. Apply again once it's fully paid.
@@ -270,6 +281,26 @@ const styles = StyleSheet.create({
   },
   applyButtonDisabled: { backgroundColor: '#BDBDBD' },
   applyButtonText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+  reportRow: {
+    paddingHorizontal: 16,
+    marginBottom: 8
+  },
+  reportButton: {
+    marginTop: 0,
+    alignSelf: 'flex-start',
+    minWidth: undefined,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#2E7D32',
+    backgroundColor: '#E8F5E9'
+  },
+  reportButtonText: {
+    color: '#1B5E20',
+    fontWeight: '700',
+    fontSize: 12
+  },
   noticeText: {
     fontSize: 12,
     color: '#F57C00',

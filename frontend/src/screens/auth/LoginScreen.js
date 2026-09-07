@@ -138,6 +138,10 @@ export default function LoginScreen({ navigation }) {
           </Text>
         </TouchableOpacity>
       )}
+
+      <TouchableOpacity onPress={() => navigation.navigate('Landing')} style={{ marginTop: 12 }}>
+        <Text style={styles.linkText}>← Back</Text>
+      </TouchableOpacity>
     </KeyboardAvoidingView>
   );
 }

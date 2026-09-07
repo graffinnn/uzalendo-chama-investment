@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { gql, useQuery, useMutation } from '@apollo/client';
+import ReportButton from '../../components/ReportButton';
 
 const GET_CYCLE_DATA = gql`
   query GetCycleData {
@@ -185,6 +186,16 @@ export default function ManageCyclesScreen() {
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <Text style={styles.title}>Merry-Go-Round Cycle</Text>
 
+        <View style={styles.reportRow}>
+          <ReportButton
+            reportPath="cycle-report"
+            filename="cycle-report.pdf"
+            label="Download Cycle Report"
+            style={styles.reportButton}
+            textStyle={styles.reportButtonText}
+          />
+        </View>
+
         {currentCycle ? (
           <View style={styles.card}>
             <View style={styles.cardHeaderRow}>
@@ -343,7 +354,26 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F7F5' },
   content: { padding: 16, paddingBottom: 40 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  title: { fontSize: 20, fontWeight: '700', color: '#1B5E20', marginBottom: 16 },
+  title: { fontSize: 20, fontWeight: '700', color: '#1B5E20', marginBottom: 12 },
+  reportRow: {
+    marginBottom: 16
+  },
+  reportButton: {
+    marginTop: 0,
+    alignSelf: 'flex-start',
+    minWidth: undefined,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#2E7D32',
+    backgroundColor: '#E8F5E9'
+  },
+  reportButtonText: {
+    color: '#1B5E20',
+    fontWeight: '700',
+    fontSize: 12
+  },
   card: {
     backgroundColor: '#fff',
     borderRadius: 14,

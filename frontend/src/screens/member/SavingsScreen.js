@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { gql, useQuery, useMutation } from '@apollo/client';
 import { useAuth } from '../../context/AuthContext';
+import { downloadReport } from '../../services/reportDownload';
 
 const GET_MY_SAVINGS_DATA = gql`
   query GetMySavingsData {
@@ -83,6 +84,7 @@ export default function SavingsScreen() {
   const [reason, setReason] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
   const [depositNotes, setDepositNotes] = useState('');
+  const [downloadingStatement, setDownloadingStatement] = useState(false);
 
   const { data, loading, error, refetch } = useQuery(GET_MY_SAVINGS_DATA, {
     fetchPolicy: 'network-only'
@@ -144,6 +146,17 @@ export default function SavingsScreen() {
     });
   };
 
+  const handleDownloadStatement = async () => {
+    setDownloadingStatement(true);
+    try {
+      await downloadReport('savings-statement', 'savings-statement.pdf');
+    } catch (err) {
+      Alert.alert('Download failed', err.message || 'Could not download your statement.');
+    } finally {
+      setDownloadingStatement(false);
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -199,6 +212,17 @@ export default function SavingsScreen() {
                   <Text style={styles.withdrawButtonText}>Withdraw</Text>
                 </TouchableOpacity>
               </View>
+              <TouchableOpacity
+                style={styles.downloadButton}
+                onPress={handleDownloadStatement}
+                disabled={downloadingStatement}
+              >
+                {downloadingStatement ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.downloadButtonText}>Download Statement</Text>
+                )}
+              </TouchableOpacity>
             </View>
             <Text style={styles.sectionTitle}>Transaction History</Text>
           </View>
@@ -357,6 +381,18 @@ const styles = StyleSheet.create({
     borderColor: '#fff'
   },
   withdrawButtonText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+  downloadButton: {
+    marginTop: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 200
+  },
+  downloadButtonText: { color: '#fff', fontWeight: '600', fontSize: 12 },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: '#333', marginBottom: 10 },
   row: {
     flexDirection: 'row',

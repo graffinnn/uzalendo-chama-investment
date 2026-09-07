@@ -81,19 +81,19 @@ const applyForLoan = async (input, memberId) => {
     throw new Error('You already have an active or pending loan.');
   }
 
-  const [insertResultArray] = await sequelize.query(
+  const loanId = await insert(
     'INSERT INTO loans SET member_id = ?, amount = ?, reason = ?, repayment_period_months = ?, interest_rate = 10.00',
-    { replacements: [memberId, amount, reason, period] }
+    [memberId, amount, reason, period]
   );
 
-  await query(
+  await insert(
     'INSERT INTO audit_logs SET performed_by_member = ?, action = ?, target_table = ?, target_id = ?, details = ?',
-    [memberId, 'LOAN_APPLIED', 'loans', insertResultArray, `Loan application of KES ${amount} for ${period} months`]
+    [memberId, 'LOAN_APPLIED', 'loans', loanId, `Loan application of KES ${amount} for ${period} months`]
   );
 
   const loans = await query(
     'SELECT id, amount, reason, repayment_period_months, interest_rate, status, applied_at FROM loans WHERE id = ?',
-    [insertResultArray]
+    [loanId]
   );
 
   return loans[0];

@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { gql, useQuery, useMutation } from '@apollo/client';
 import { useAuth } from '../../context/AuthContext';
+import ReportButton from '../../components/ReportButton';
 
 const GET_MY_CONTRIBUTIONS = gql`
   query GetMyContributions($memberId: ID!) {
@@ -68,6 +69,7 @@ export default function ContributionsScreen() {
   const [amount, setAmount] = useState('');
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
+  const [downloadingStatement, setDownloadingStatement] = useState(false);
 
   const { data, loading, error, refetch } = useQuery(GET_MY_CONTRIBUTIONS, {
     variables: { memberId: user?.id },
@@ -140,6 +142,11 @@ export default function ContributionsScreen() {
           <TouchableOpacity style={styles.makeButton} onPress={() => setModalVisible(true)}>
             <Text style={styles.makeButtonText}>Make Contribution</Text>
           </TouchableOpacity>
+          <ReportButton
+            reportPath="contribution-history"
+            filename="contribution-history.pdf"
+            label="Download Contribution History"
+          />
         </View>
 
         <FlatList
